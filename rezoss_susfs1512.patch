@@ -149,7 +149,41 @@ diff --git a/KernelSU-Next/kernel/Makefile b/KernelSU-Next/kernel/Makefile
 index 9fec3ef3..8a190993 100644
 --- a/KernelSU-Next/kernel/Makefile
 +++ b/KernelSU-Next/kernel/Makefile
-@@ -51,4 +51,81 @@ ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
+@@ -67,20 +67,33 @@
+ KSU_NEXT_MANAGER_SIZE := 0x3e6
+ endif
+ 
++ifndef WKSU_MANAGER_SIZE
++WKSU_MANAGER_SIZE := 0x39b
++endif
++
+ ifndef KSU_NEXT_MANAGER_HASH
+ KSU_NEXT_MANAGER_HASH := 79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7
+ endif
+ 
++ifndef WKSU_MANAGER_HASH
++WKSU_MANAGER_HASH := 593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800
++endif
++
+ ifdef KSU_MANAGER_PACKAGE
+ ccflags-y += -DKSU_MANAGER_PACKAGE=\"$(KSU_MANAGER_PACKAGE)\"
+ $(info -- KernelSU-Next Manager package name: $(KSU_MANAGER_PACKAGE))
++$(info -- Wild KSU Manager package name: $(KSU_MANAGER_PACKAGE))
+ endif
+ 
+ $(info -- KernelSU-Next Manager signature size: $(KSU_NEXT_MANAGER_SIZE))
+ $(info -- KernelSU-Next Manager signature hash: $(KSU_NEXT_MANAGER_HASH))
++$(info -- Wild KSU Manager signature size: $(WKSU_MANAGER_SIZE))
++$(info -- Wild KSU Manager signature hash: $(WKSU_MANAGER_HASH))
+ 
+ ccflags-y += -DEXPECTED_MANAGER_SIZE=$(KSU_NEXT_MANAGER_SIZE)
+ ccflags-y += -DEXPECTED_MANAGER_HASH=\"$(KSU_NEXT_MANAGER_HASH)\"
++ccflags-y += -DEXPECTED_MANAGER_SIZE=$(WKSU_MANAGER_SIZE)
++ccflags-y += -DEXPECTED_MANAGER_HASH=\"$(WKSU_MANAGER_HASH)\"
+ 
+ ccflags-y += -DKSU_UMOUNT
+ 
+@@ -136,4 +149,81 @@
  ccflags-y += -Wno-implicit-function-declaration -Wno-strict-prototypes -Wno-int-conversion -Wno-gcc-compat
  ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
  
@@ -231,40 +265,6 @@ index 9fec3ef3..8a190993 100644
 +$(info -- Read: https://gitlab.com/simonpunk/susfs4ksu)
 +endif
  # Keep a new line here!! Because someone may append config
-@@ -66,20 +66,33 @@
- KSU_NEXT_MANAGER_SIZE := 0x3e6
- endif
- 
-+ifndef WKSU_MANAGER_SIZE
-+WKSU_MANAGER_SIZE := 0x39b
-+endif
-+
- ifndef KSU_NEXT_MANAGER_HASH
- KSU_NEXT_MANAGER_HASH := 79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7
- endif
- 
-+ifndef WKSU_MANAGER_HASH
-+WKSU_MANAGER_HASH := 593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800
-+endif
-+
- ifdef KSU_MANAGER_PACKAGE
- ccflags-y += -DKSU_MANAGER_PACKAGE=\"$(KSU_MANAGER_PACKAGE)\"
- $(info -- KernelSU-Next Manager package name: $(KSU_MANAGER_PACKAGE))
-+$(info -- Wild KSU Manager package name: $(KSU_MANAGER_PACKAGE))
- endif
- 
- $(info -- KernelSU-Next Manager signature size: $(KSU_NEXT_MANAGER_SIZE))
- $(info -- KernelSU-Next Manager signature hash: $(KSU_NEXT_MANAGER_HASH))
-+$(info -- Wild KSU Manager signature size: $(WKSU_MANAGER_SIZE))
-+$(info -- Wild KSU Manager signature hash: $(WKSU_MANAGER_HASH))
- 
- ccflags-y += -DEXPECTED_MANAGER_SIZE=$(KSU_NEXT_MANAGER_SIZE)
- ccflags-y += -DEXPECTED_MANAGER_HASH=\"$(KSU_NEXT_MANAGER_HASH)\"
-+ccflags-y += -DEXPECTED_MANAGER_SIZE=$(WKSU_MANAGER_SIZE)
-+ccflags-y += -DEXPECTED_MANAGER_HASH=\"$(WKSU_MANAGER_HASH)\"
- 
- ccflags-y += -DKSU_UMOUNT
- 
 diff --git a/KernelSU-Next/kernel/allowlist.c b/KernelSU-Next/kernel/allowlist.c
 index 97455675..01020863 100644
 --- a/KernelSU-Next/kernel/allowlist.c
@@ -317,8 +317,7 @@ index ba8b73f2..6ae5e3b9 100644
 +	return check_v2_signature(path, expected_manager_size, expected_manager_hash)
 +		|| check_v2_signature(path, 0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7")   // KernelSU-Next
 +		|| check_v2_signature(path, 0x033b, "c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6")  // KernelSU
-+  || check_v2_signature(path, 0x35c, "947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef")   // SukiSU
-+  || check_v2_signature(path, 0x39b, "593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800");  // TheWildJames Fork Manager
++       || check_v2_signature(path, 0x35c, "947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef");  // SukiSU
  }
 
 diff --git a/KernelSU-Next/kernel/core_hook.c b/KernelSU-Next/kernel/core_hook.c
