@@ -74,11 +74,12 @@ jobs:
           #patch -p1 --fuzz=3 < 10_enable_susfs_for_ksu.patch
           #cd ..
           # Adding apk_sign for other manager
-          sed -i '415c\
+          sed -i '/return check_v2_signature(path, false, NULL);/c\
           return check_v2_signature(path, expected_manager_size, expected_manager_hash)\
           || check_v2_signature(path, 0x39b, "593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800")   // WKSU\
           || check_v2_signature(path, 0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7");  // KernelSU-NEXT' \
-          KernelSU/kernel/apk_sign.c
+          kernel/apk_sign.c
+
 
           
           # Integrate scope-minimized manual KernelSU hooks via a patch
