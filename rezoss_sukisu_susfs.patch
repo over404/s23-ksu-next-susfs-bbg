@@ -160,7 +160,7 @@ diff --git a/KernelSU/kernel/app_profile.c b/KernelSU/kernel/app_profile.c
 index 324147bc..4784346e 100644
 --- a/KernelSU/kernel/app_profile.c
 +++ b/KernelSU/kernel/app_profile.c
-@@ -12,7 +12,9 @@
+@@ -12,9 +12,11 @@
  #include "app_profile.h"
  #include "klog.h" // IWYU pragma: keep
  #include "selinux/selinux.h"
@@ -168,8 +168,11 @@ index 324147bc..4784346e 100644
  #include "syscall_hook_manager.h"
 +#endif // #ifndef CONFIG_KSU_SUSFS
  #include "sucompat.h"
- 
+-
++#include <linux/tty.h>
  #include "sulog.h"
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
 @@ -88,8 +90,10 @@
  void escape_with_root_profile(void)
  {
@@ -203,6 +206,19 @@ index 324147bc..4784346e 100644
  }
  
  void escape_to_root_for_init(void)
+@@ -308,9 +313,11 @@
+ #if __SULOG_GATE
+     ksu_sulog_report_su_grant(target_uid, "cmd_su", "manual_escalation");
+ #endif
++#ifndef CONFIG_KSU_SUSFS
+     for_each_thread (p, t) {
+         ksu_set_task_tracepoint_flag(t);
+     }
++#endif // #ifndef CONFIG_KSU_SUSFS	
+     pr_info("cmd_su: privilege escalation completed for UID: %d, PID: %d\n",
+             target_uid, target_pid);
+ }
+
 diff --git a/KernelSU/kernel/kernel_umount.c b/KernelSU/kernel/kernel_umount.c
 index a58d2f75..f6fc3cc8 100644
 --- a/KernelSU/kernel/kernel_umount.c
@@ -1081,15 +1097,52 @@ index 0a9fc63d..cb83f11a 100644
          break;
      }
      default: {
-@@ -1048,6 +1084,7 @@
+@@ -1011,43 +1047,8 @@
+     kfree(tw);
  }
  
+-// downstream: make sure to pass arg as reference, this can allow us to extend things.
+-int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
+-                          void __user **arg)
+-{
+-    struct ksu_install_fd_tw *tw;
+-
+-    if (magic1 != KSU_INSTALL_MAGIC1)
+-        return 0;
+-
+-#ifdef CONFIG_KSU_DEBUG
+-    pr_info("sys_reboot: intercepted call! magic: 0x%x id: %d\n", magic1,
+-            magic2);
+-#endif
+-
+-    // Check if this is a request to install KSU fd
+-    if (magic2 == KSU_INSTALL_MAGIC2) {
+-        tw = kzalloc(sizeof(*tw), GFP_ATOMIC);
+-        if (!tw)
+-            return 0;
+-
+-        tw->outp = (int __user *)*arg;
+-        tw->cb.func = ksu_install_fd_tw_func;
+-
+-        if (task_work_add(current, &tw->cb, TWA_RESUME)) {
+-            kfree(tw);
+-            pr_warn("install fd add task_work failed\n");
+-        }
+-
+-        return 0;
+-    }
+-
+-    // extensions
+-
+-    return 0;
+-}
+-
  // Reboot hook for installing fd
 +#ifndef CONFIG_KSU_SUSFS
  static int reboot_handler_pre(struct kprobe *p, struct pt_regs *regs)
  {
      struct pt_regs *real_regs = PT_REAL_REGS(regs);
-@@ -1063,6 +1100,114 @@
+@@ -1063,6 +1064,114 @@
      .symbol_name = REBOOT_SYMBOL,
      .pre_handler = reboot_handler_pre,
  };
@@ -1204,7 +1257,7 @@ index 0a9fc63d..cb83f11a 100644
  
  void ksu_supercalls_init(void)
  {
-@@ -1073,17 +1218,23 @@
+@@ -1073,17 +1182,23 @@
          pr_info("  %-18s = 0x%08x\n", ksu_ioctl_handlers[i].name,
                  ksu_ioctl_handlers[i].cmd);
      }
