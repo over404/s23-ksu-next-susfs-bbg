@@ -75,8 +75,8 @@ jobs:
           #echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./arch/arm64/configs/gki_defconfig
           #echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/gki_defconfig
           # Sukisu 69_hide.patch
-          curl -L -o 69_hide.patch https://github.com/SukiSU-Ultra/SukiSU_patch/raw/83aa64b7548890bb1f2eff6c990c03a1802df27b/69_hide_stuff.patch
-          patch -p1 --fuzz=3 < 69_hide.patch
+          #curl -L -o 69_hide.patch https://github.com/SukiSU-Ultra/SukiSU_patch/raw/83aa64b7548890bb1f2eff6c990c03a1802df27b/69_hide_stuff.patch
+          #patch -p1 --fuzz=3 < 69_hide.patch
           # SukiSU KPM
           echo "CONFIG_KPM=y" >> ./arch/arm64/configs/gki_defconfig
           sed -i '/config KPM/{:a; n; s/^\s*default n/default y/; ta;}' KernelSU/kernel/Kconfig
