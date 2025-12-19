@@ -61,8 +61,13 @@ jobs:
           cd ..
 
           # Begin susfs patching
-          cp -rv ./susfs4ksu/kernel_patches/fs/. ./fs/
-          cp -rv ./susfs4ksu/kernel_patches/include/linux/. ./include/linux/
+          cp -rv ./susfs4ksu/kernel_patches/fs/ ./fs/
+          cp -rv ./susfs4ksu/kernel_patches/include/linux/ ./include/linux/
+
+          # Temp fix 
+          if [ ! -f ./include/linux/susfs_def.h ]
+          curl -L -o ./include/linux/susfs_def.h https://gitlab.com/simonpunk/susfs4ksu/-/raw/3c7ce6a308d93f33f06d528740eff0afcba31127/kernel_patches/include/linux/susfs_def.h
+          fi
 
           patch -p1 --fuzz=3 < "${GITHUB_WORKSPACE}/rezoss_next3_susfs2.patch"
           
